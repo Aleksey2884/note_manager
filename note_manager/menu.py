@@ -1,117 +1,101 @@
+import datetime
+class Note:
+    def __init__(self, title, content, created_date=None, issue_date=None):
+        self.title = title
+        self.content = content
+        self.created_date = created_date or datetime.datetime.now().date()
+        self.issue_date = issue_date
+    def __repr__(self):
+        return f'Note({self.title}, {self.created_date}, {self.issue_date})'
+notes = []
 def create_note():
-    """Функция создания новой заметки"""
     title = input("Введите заголовок заметки: ")
     content = input("Введите содержание заметки: ")
-    status = input("Введите статус заметки (например, 'Новая', 'В процессе' и т.п.): ")
-    return {"title": title, "content": content, "status": status}
-
-
-def display_notes(notes):
-    """Функция отображения всех заметок"""
+    issue_date_str = input("Укажите дату исполнения (в формате ДД-ММ-ГГГГ): ")
+    try:
+        issue_date = datetime.datetime.strptime(issue_date_str, "%d-%m-%Y").date()
+    except ValueError:
+        print("Ошибка: неверный формат даты. Используйте формат ДД-ММ-ГГГГ.")
+        return
+    note = Note(title, content, issue_date=issue_date)
+    notes.append(note)
+    print(f"Заметка '{note.title}' успешно создана! Дата создания: {note.created_date:%d-%m-%Y}, "
+          f"Срок исполнения: {note.issue_date:%d-%m-%Y}")
+def display_notes():
     if not notes:
-        print("Список заметок пуст.")
+        print("Нет заметок для отображения.")
         return
     for i, note in enumerate(notes, start=1):
-        print(f"{i}. {note['title']}: {note['content']} ({note['status']})")
-
-
-def update_note(note):
-    """Функция обновления существующей заметки"""
-    new_title = input("Новый заголовок (оставьте пустым, чтобы оставить прежний): ") or note["title"]
-    new_content = input("Новое содержание (оставьте пустым, чтобы оставить прежнее): ") or note["content"]
-    new_status = input("Новый статус (оставьте пустым, чтобы оставить прежний): ") or note["status"]
-    return {"title": new_title, "content": new_content, "status": new_status}
-
-
-def delete_note(notes, index):
-    """Функция удаления заметки по индексу"""
-    if 0 <= index < len(notes):
-        del notes[index]
-        print("Заметка удалена успешно.")
-    else:
-        print("Неверный номер заметки.")
-
-
-def search_notes(notes, keyword="", status=""):
-    """Функция поиска заметок по ключевым словам и статусу"""
-    results = []
-    for note in notes:
-        if keyword.lower() in note["title"].lower() + note["content"].lower() \
-                and (not status or status == note["status"]):
-            results.append(note)
-    return results
-
-
-# Основная программа
-if __name__ == "__main__":
-
-    notes = []
-
+        print(f"{i}. {note.title}")
+        print(f"Дата создания: {note.created_date:%d-%m-%Y}")
+        print(f"Срок исполнения: {note.issue_date:%d-%m-%Y}")
+        print(f"Содержание:\n{note.content}\n")
+def update_note():
+    index = int(input("Введите номер заметки для обновления: "))
+    if index < 1 or index > len(notes):
+        print("Неправильный номер заметки.")
+        return
+    note = notes[index - 1]
+    new_title = input(f"Введите новый заголовок ({note.title}): ") or note.title
+    new_content = input(f"Введите новое содержание ({note.content}): ") or note.content
+    new_created_date = input(f"Введите новую дату создания (формат DD-MM-YYYY): ")
+    new_issue_date = input(f"Введите новую дату исполнения (формат DD-MM-YYYY): ")
+    note.title = new_title
+    note.content = new_content
+    if new_created_date:
+        try:
+            note.created_date = datetime.datetime.strptime(new_created_date, "%d-%m-%Y").date()
+        except ValueError:
+            print("Ошибка! Неверная дата создания. Дата оставлена без изменений.")
+    if new_issue_date:
+        try:
+            note.issue_date = datetime.datetime.strptime(new_issue_date, "%d-%m-%Y").date()
+        except ValueError:
+            print("Ошибка! Неверная дата исполнения. Дата оставлена без изменений.")
+    print(f"Заметка '{new_title}' успешно обновлена.")
+def delete_note():
+    index = int(input("Введите номер заметки для удаления: "))
+    if index < 1 or index > len(notes):
+        print("Ничего не найдено.")
+        return
+    deleted_note = notes.pop(index - 1)
+    print(f"Заметка '{deleted_note.title}' удалена.")
+def search_notes():
+    query = input("Введите строку для поиска: ").lower()
+    results = [note for note in notes if query in note.title.lower() or query in note.content.lower()]
+    if not results:
+        print("Ничего не найдено.")
+        return
+    for result in results:
+        print(result.title)
+        print(f"Дата создания: {result.created_date:%d-%m-%Y}")
+        print(f"Срок исполнения: {result.issue_date:%d-%m-%Y}")
+        print(f"Содержание:\n{result.content}\n")
+def main_menu():
     while True:
-
-        print(
-            """
-
-            Меню действий:
-
-            1. Создать новую заметку
-
-            2. Показать все заметки
-
-            3. Обновить заметку
-
-            4. Удалить заметку
-
-            5. Найти заметки
-
-            6. Выйти из программы
-
-            """
-        )
-
-        choice = input("Ваш выбор: ")
-
-        if choice == "1":
-            note = create_note()
-            notes.append(note)
-
-        elif choice == "2":
-            display_notes(notes)
-
-        elif choice == "3":
-            if notes:
-                display_notes(notes)
-                try:
-                    index = int(input("Введите номер заметки для обновления: ")) - 1
-                    if 0 <= index < len(notes):
-                        notes[index] = update_note(notes[index])
-                    else:
-                        print("Неверный номер заметки.")
-                except ValueError:
-                    print("Пожалуйста, введите корректный номер заметки.")
-            else:
-                print("Список заметок пуст.")
-
-        elif choice == "4":
-            if notes:
-                display_notes(notes)
-                try:
-                    index = int(input("Введите номер заметки для удаления: ")) - 1
-                    delete_note(notes, index)
-                except ValueError:
-                    print("Пожалуйста, введите корректный номер заметки.")
-            else:
-                print("Список заметок пуст.")
-
-        elif choice == "5":
-            keyword = input("Введите ключевое слово для поиска: ")
-            status = input("Введите статус для поиска (или оставьте пустым): ")
-            found_notes = search_notes(notes, keyword, status)
-            display_notes(found_notes)
-
-        elif choice == "6":
-            print("Программа завершена. Спасибо за использование!")
+        print("\nМеню:")
+        print("1. Создать новую заметку")
+        print("2. Показать все заметки")
+        print("3. Обновить заметку")
+        print("4. Удалить заметку")
+        print("5. Найти заметки")
+        print("6. Выйти из программы")
+        choice = input("Выберите пункт меню: ")
+        if choice == '1':
+            create_note()
+        elif choice == '2':
+            display_notes()
+        elif choice == '3':
+            update_note()
+        elif choice == '4':
+            delete_note()
+        elif choice == '5':
+            search_notes()
+        elif choice == '6':
             break
-
         else:
-            print("Неверный выбор. Попробуйте снова.")
+            print("Неверный ввод. Попробуйте еще раз.")
+    print("Завершение программы!")
+
+if __name__ == "__main__":
+    main_menu()        
